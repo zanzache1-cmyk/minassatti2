@@ -1,74 +1,64 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="utf-8">
-    <title>جدول إسناد الأساتذة - منصة إلكترونية</title>
-    <!-- [تم الاحتفاظ بنفس CSS الخاص بك الأصلي تماماً] -->
+    <!-- [ضع هنا كامل كود الـ CSS الأصلي الخاص بك] -->
     <style>
-        /* (أضف هنا كامل كود الـ CSS الأصلي الخاص بك كما هو) */
-        /* سأضع هنا تنسيقاً إضافياً للجدول ليتناسب مع تصميمك */
-        .table-card { margin-top: 20px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: #333; }
-        th { background: #4a2c11; color: white; padding: 10px; }
-        td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+        /* [نفس تصميمك الأصلي] */
+        .live-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; color: #111; }
+        .live-table th, .live-table td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+        .live-table th { background: #4a2c11; color: white; }
     </style>
 </head>
 <body>
-    <!-- [هنا ضع محتوى الـ HTML الأصلي الخاص بك كما هو] -->
-    <!-- [بما فيه الهيدر Board والـ Form] -->
-
-    <!-- أضف هذا القسم تحت الفورم مباشرة لعرض الجدول -->
-    <div id="tableContainer" class="card">
-        <h2>الأساتذة المسجلون</h2>
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th>التاريخ</th><th>المؤسسة</th><th>اللقب</th><th>الاسم</th><th>المستوى</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
+    <!-- [ضع هنا كامل كود الـ HTML الأصلي الخاص بك] -->
+    
+    <!-- قسم الجدول المباشر -->
+    <section class="card">
+        <h2>جدول البيانات المباشر</h2>
+        <table class="live-table">
+            <thead><tr><th>اللقب</th><th>الاسم</th><th>المستوى</th></tr></thead>
+            <tbody id="liveData"></tbody>
         </table>
-    </div>
+    </section>
 
-<script>
-    const ENDPOINT = "https://script.google.com/macros/s/AKfycbw6JjWf2sLSIyKM_8FN0KU7ILuKLdkiDwG7poYj64vZNnobHVk1FDtTR2Q78zTjCd3X/exec";
+    <script>
+        const ENDPOINT = "https://script.google.com/macros/s/AKfycbwG9CrHjkpVCyR6dT-GkWyeJf2Le2RUblouth7NZvT6R3qNCcNz2NBcvBub0uugbpvB/exec";
 
-    // دالة الحفظ التلقائي
-    function autoSave() {
-        var d = {};
-        S.forEach(function(sec){sec.f.forEach(function(f){
-            var el = document.getElementById("f_"+f.k);
-            if(el) d[f.k] = el.value;
-        })});
-        
-        fetch(ENDPOINT, {method: "POST", body: JSON.stringify(d)})
-        .then(() => {
-            console.log("تم الحفظ تلقائياً");
-            fetchData(); // تحديث الجدول فوراً
+        // الحفظ التلقائي لكل حقل
+        function autoSave() {
+            var d = {};
+            // جمع البيانات من النموذج الأصلي الخاص بك
+            S.forEach(function(sec){sec.f.forEach(function(f){
+                var el = document.getElementById("f_"+f.k);
+                if(el) d[f.k] = el.value;
+            })});
+            
+            fetch(ENDPOINT, {method: "POST", body: JSON.stringify(d)})
+            .then(() => {
+                console.log("تم الحفظ");
+                updateTable(); 
+            });
+        }
+
+        // عرض البيانات
+        async function updateTable() {
+            const res = await fetch(ENDPOINT);
+            const data = await res.json();
+            const tbody = document.getElementById("liveData");
+            tbody.innerHTML = "";
+            // عرض آخر 5 إدخالات
+            data.slice(-5).forEach(row => {
+                tbody.innerHTML += `<tr><td>${row[2]}</td><td>${row[3]}</td><td>${row[5]}</td></tr>`;
+            });
+        }
+
+        // تفعيل الحفظ التلقائي عند أي تغيير
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll("input, select").forEach(el => {
+                el.addEventListener("change", autoSave);
+            });
+            updateTable();
         });
-    }
-
-    // دالة جلب البيانات للجدول
-    async function fetchData() {
-        const response = await fetch(ENDPOINT);
-        const data = await response.json();
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = '';
-        // عرض آخر 10 سجلات مثلاً
-        data.slice(-10).forEach(row => {
-            tbody.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${row[5]}</td></tr>`;
-        });
-    }
-
-    // إضافة مستمع للحفظ التلقائي لكل الحقول
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll("input, select").forEach(el => {
-            el.addEventListener("change", autoSave);
-        });
-        fetchData(); // تحميل البيانات عند البدء
-    });
-
-    // [أضف هنا باقي كود الـ JavaScript الأصلي الخاص بك]
-</script>
+    </script>
 </body>
 </html>
