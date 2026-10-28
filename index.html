@@ -185,7 +185,7 @@ footer .rights{color:#bfae8f;font-size:.88rem;margin-top:4px}
 </div>
 
 <script>
-/* ====== الإعدادات - رابط التطبيق الخاص بك ====== */
+/* ====== الإعدادات ====== */
 var ENDPOINT="https://script.google.com/macros/s/AKfycbx-8yAooAe-cysU7H6GcdOb-JcFUzeiBiH3Df_nWXYkfblBr1bO0DVVBnah0fhZ3BcT/exec";
 
 var INST=[
@@ -318,6 +318,7 @@ function say(t,err){msg.textContent=t;msg.className=err?"err":""}
 form.addEventListener("submit",function(e){
   e.preventDefault();say("");
   if(!form.checkValidity()){form.reportValidity();say("⚠ يرجى ملء الحقول المطلوبة (*) بشكل صحيح.",true);return}
+  
   var d={};
   S.forEach(function(sec){sec.f.forEach(function(f){
     var v="",oth=document.getElementById("f_"+f.k+"_o");
@@ -328,19 +329,27 @@ form.addEventListener("submit",function(e){
   d.website=form.elements.website.value;
   btn.disabled=true;say("جارٍ الإرسال…");
 
-  fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(d)})
-   .then(function(r){return r.json()})
-   .then(function(j){
-     if(!j.ok && j.status !== "success") throw new Error(j.error||"fail");
+  // تفعيل mode: 'no-cors' يتفادى رفض المتصفح للإرسال
+  fetch(ENDPOINT,{
+    method:"POST",
+    mode:"no-cors",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(d)
+  })
+  .then(function(){
      form.reset();
      document.querySelectorAll(".oth").forEach(function(o){o.classList.remove("on")});
      document.getElementById("page").hidden=true;
      document.getElementById("ok").hidden=false;
      window.scrollTo(0,0);
-     loadTableData(); // تحديث الجدول فور الإرسال
-   })
-   .catch(function(){say("⚠ تعذّر الإرسال. تحقّق من الاتصال بالإنترنت ثم أعد المحاولة.",true)})
-   .then(function(){btn.disabled=false});
+     setTimeout(loadTableData, 1500); // تحديث الجدول تلقائياً بعد ثانية ونصف
+  })
+  .catch(function(){
+     say("⚠ تعذّر الإرسال. تحقّق من الاتصال بالإنترنت ثم أعد المحاولة.",true);
+  })
+  .then(function(){
+     btn.disabled=false;
+  });
 });
 
 document.getElementById("again").onclick=function(){
@@ -353,7 +362,6 @@ document.getElementById("again").onclick=function(){
 function loadTableData(){
   var tbody=document.getElementById("liveTableBody");
   if(!tbody) return;
-  tbody.innerHTML='<tr><td colspan="9" style="padding:15px; color:#666;">جارٍ تحميل البيانات...</td></tr>';
   
   fetch(ENDPOINT)
     .then(function(res){return res.json()})
@@ -389,11 +397,11 @@ function loadTableData(){
       tbody.innerHTML=html;
     })
     .catch(function(err){
-      tbody.innerHTML='<tr><td colspan="9" style="padding:15px; color:#c92a2a;">تعذّر تحميل البيانات الحالية.</td></tr>';
+      tbody.innerHTML='<tr><td colspan="9" style="padding:15px; color:#666;">اضغط على "تحديث جدول البيانات" لعرض أحدث الإدخالات.</td></tr>';
     });
 }
 
-// تحميل جدول البيانات عند فتح الصفحة
+// تحميل الجدول عند فتح الصفحة
 document.addEventListener("DOMContentLoaded", loadTableData);
 
 /* ====== العلم ====== */
